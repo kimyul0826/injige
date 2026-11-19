@@ -1,0 +1,76 @@
+{
+  "repo_id": "meta-llama/Meta-Llama-3-8B-Instruct",
+  "revision": "8afb486c1db24fe5011ec46dfbe5b5dccdb575c2",
+  "files": [
+    {
+      "name": "LICENSE",
+      "size": 7801,
+      "sha256": null
+    },
+    {
+      "name": "README.md",
+      "size": 38854,
+      "sha256": null
+    },
+    {
+      "name": "USE_POLICY.md",
+      "size": 4696,
+      "sha256": null
+    },
+    {
+      "name": "config.json",
+      "size": 654,
+      "sha256": null
+    },
+    {
+      "name": "generation_config.json",
+      "size": 187,
+      "sha256": null
+    },
+    {
+      "name": "model-00001-of-00004.safetensors",
+      "size": 4976698672,
+      "sha256": "d8cf9c4d0dd972e1a2131bfe656235ee98221679711a3beef6d46dadf0f20b5c"
+    },
+    {
+      "name": "model-00002-of-00004.safetensors",
+      "size": 4999802720,
+      "sha256": "8d4782b4a69ef03845159ce1a15e272aadaaf134dc138d68f616098e8531729c"
+    },
+    {
+      "name": "model-00003-of-00004.safetensors",
+      "size": 4915916176,
+      "sha256": "3acdd690e65c24f42a24581b8467af98bd3ca357444580f8012aacd2bd607921"
+    },
+    {
+      "name": "model-00004-of-00004.safetensors",
+      "size": 1168138808,
+      "sha256": "67e9ad31c8c32abf3a55ee7fc7217b3ecb35fd3c74d98a5bd233e0e4d6964f46"
+    },
+    {
+      "name": "model.safetensors.index.json",
+      "size": 23950,
+      "sha256": null
+    },
+    {
+      "name": "original/params.json",
+      "size": 211,
+      "sha256": null
+    },
+    {
+      "name": "special_tokens_map.json",
+      "size": 73,
+      "sha256": null
+    },
+    {
+      "name": "tokenizer.json",
+      "size": 9085698,
+      "sha256": null
+    },
+    {
+      "name": "tokenizer_config.json",
+      "size": 50977,
+      "sha256": null
+    }
+  ]
+}

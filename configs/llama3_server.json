@@ -1,0 +1,10 @@
+{
+  "name": "llama3-8b-server",
+  "provider": "openai",
+  "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+  "prompt_family": "llama",
+  "base_url": "http://localhost:8000/v1",
+  "api_key_env": "LLAMA_API_KEY",
+  "max_tokens": 4096,
+  "temperature": 0
+}

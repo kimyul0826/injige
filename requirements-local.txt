@@ -1,0 +1,5 @@
+-r requirements.txt
+# Optional: local Llama 3 inference
+transformers>=4.43,<5
+torch>=2.2,<3
+accelerate>=0.30,<2

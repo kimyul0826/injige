@@ -1,0 +1,43 @@
+# Local environments, credentials and generated data
+.venv/
+.conda/
+.deps/
+.cache/
+.tmp/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+outputs/
+dist/
+*.zip
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+# Keep only the pinned download metadata, not weights or machine-local status.
+models/*
+!models/llama3-download-manifest.json
+# Reference clone is optional; runtime prompts/data/license are vendored.
+upstream/
+/*Assignment Notice.pdf
+# Retain research code/reports; exclude generated experiment artifacts.
+exp/gpt/*
+!exp/gpt/*.py
+!exp/gpt/*.md
+exp/claude/results/
+# Editor, OS, local logs and plotting caches
+.DS_Store
+._*
+.vscode/
+.idea/
+*.swp
+*.swo
+*.log
+.mplconfig/
+.pytest_cache/
+*.egg-info/
+build/

@@ -1,0 +1,8 @@
+{
+  "name": "gpt-4o-mini",
+  "provider": "openai",
+  "model": "gpt-4o-mini",
+  "prompt_family": "gpt",
+  "max_tokens": 1000,
+  "temperature": 0
+}

@@ -1,0 +1,10 @@
+{
+  "name": "llama3-8b-local",
+  "provider": "transformers",
+  "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+  "prompt_family": "llama",
+  "dtype": "bfloat16",
+  "device_map": "auto",
+  "max_tokens": 8000,
+  "temperature": 0
+}

@@ -1,0 +1,12 @@
+{
+  "name": "gpt-3.5-turbo-instruct-upstream",
+  "provider": "openai",
+  "model": "gpt-3.5-turbo-instruct",
+  "prompt_family": "gpt",
+  "completion_api": true,
+  "max_tokens": 1000,
+  "stop": [
+    "\n"
+  ],
+  "temperature": 0
+}
