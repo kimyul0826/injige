@@ -156,7 +156,7 @@ PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -v
 ## 8. 8방향 이동 + 명시적 장벽 좌표 실험
 
 `configs/llama3_8way_walls.json`은 `prompt_variant=eight_way_explicit_walls`를 사용한다.
-현재점의 8개 이동 후보와 직선/대각선 이동 비용을 명시하고, 실제 문제와 few-shot 예제의 장벽 목록 모두를 `W1: horizontal wall at y = ..., from (...) to (...)` 형식으로 변환한다.
+기존 지시문 형식을 유지하면서 `You can move horizontally, vertically, and diagonally.`와 `Barriers cannot be crossed.` 두 문장을 추가한다. 실제 문제와 few-shot 예제의 장벽 목록 모두를 `B1: horizontal barrier at y = ..., from (...) to (...)` 형식으로 변환한다. 이동 후보 열거, 비용, 별도 충돌 규칙 설명은 추가하지 않는다.
 원본 예제 응답/CoT 설명, 생성 설정, 필터, 탐색 로직은 유지한다. 따라서 예제 응답에 있던 오류까지 교정한 실험은 아니다. 두 변경을 동시에 적용하므로 개별 변경의 효과를 분리하는 실험도 아니다.
 원본 프롬프트는 기본 설정에서 그대로 사용된다. 새 설정은 논문 원본 재현과 구별되는 프롬프트 개선 실험이다.
 
