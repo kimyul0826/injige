@@ -182,3 +182,28 @@ python scripts/run_multigpu.py \
 동일 서버에서 원본 대조군을 새로 실행할 때는 `--config configs/llama3_table1_upstream.json --prompts standard --output outputs/llama3-original-standard-v1`을 사용한다.
 
 새 Standard 프롬프트 전체 예시는 `examples/prompt_8way_walls.txt`에서 확인할 수 있다.
+
+
+## 9. 원본 장벽 좌표 + 8방향 이동 문장만 추가
+
+`configs/llama3_8way_only.json`은 원본 프롬프트에 다음 한 문장만 추가한다:
+
+```text
+You can move horizontally, vertically, and diagonally.
+```
+
+원본 장벽 설명 바로 다음에 한 번 삽입한다. `Horizontal Barriers: [[y, x_start, x_end], ...]`와 `Vertical Barriers: [[x, y_start, y_end], ...]` 표기, few-shot 예제와 응답, CoT·RePE 지시는 모두 원본과 같다. `Barriers cannot be crossed.` 문장은 추가하지 않는다. 기존 명시적 장벽 실험과 원본 설정은 그대로 유지한다.
+
+```bash
+python3 scripts/run_multigpu.py \
+  --config configs/llama3_8way_only.json \
+  --model-path /workspace/Meta-Llama-3-8B-Instruct \
+  --gpus all \
+  --prompts standard cot repe \
+  --output outputs/llama3-8way-only-v1 \
+  --zip
+```
+
+총 3,000회 생성이며, 결과는 `outputs/llama3-8way-only-v1.zip`에 저장된다. Standard만 먼저 확인하려면 `--prompts standard --output outputs/llama3-8way-only-standard-v1`을 사용한다. 원본 대조군도 같은 GPU·소프트웨어에서 실행하면 생성 환경 차이를 통제할 수 있다.
+
+Standard 프롬프트 전문은 `examples/prompt_8way_only.txt`에서 확인할 수 있다.

@@ -8,6 +8,11 @@ MOVEMENT = 'You can move horizontally, vertically, and diagonally.\nBarriers can
 def clarify_prompt(prompt, family, variant):
     if variant == 'upstream':
         return prompt
+    if variant == 'eight_way_only':
+        description = 'Horizontal barriers are represented as [y, x_start, x_end], and vertical barriers are represented as [x, y_start, y_end].'
+        if description not in prompt:
+            raise ValueError('Original barrier description missing from prompt')
+        return prompt.replace(description, description + '\nYou can move horizontally, vertically, and diagonally.', 1)
     if variant != 'eight_way_explicit_walls':
         raise ValueError(f'Unknown prompt_variant: {variant}')
 
