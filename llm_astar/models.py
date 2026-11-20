@@ -55,7 +55,7 @@ def build_prompt(query, style, family, variant="upstream"):
         horizontal_barriers=query.get('horizontal_barriers',[]),vertical_barriers=query.get('vertical_barriers',[]))
 
     from .prompt_variants import clarify_prompt
-    return clarify_prompt(prompt, family, variant)
+    return clarify_prompt(prompt, family, variant, query=query)
 
 def chat_messages(prompt, family):
     if family != 'llama':
