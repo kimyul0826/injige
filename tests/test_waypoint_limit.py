@@ -11,7 +11,7 @@ class WaypointLimitTests(unittest.TestCase):
             sentence = (f'\nFor this problem, use at most {count} intermediate waypoints '
                         'in the final generated path, excluding the start and goal points.')
             for family in ('llama', 'gpt'):
-                for style in ('standard', 'cot', 'repe'):
+                for style in ('standard', 'cot', 'repe', 'vot'):
                     with self.subTest(count=count, family=family, style=style):
                         original = build_prompt(q, style, family)
                         modified = build_prompt(q, style, family, 'waypoint_limit_by_obstacles')

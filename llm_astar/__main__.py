@@ -127,7 +127,7 @@ def main():
     parser.add_argument('--input',default=str(ROOT/'examples/query.json'))
     parser.add_argument('--config',action='append',default=[],help='JSON model config; repeat for model comparison')
     parser.add_argument('--methods',nargs='+',choices=['astar','llm','llm-astar'],default=['astar'])
-    parser.add_argument('--prompts',nargs='+',choices=['standard','cot','repe'],default=['standard'])
+    parser.add_argument('--prompts',nargs='+',choices=['standard','cot','repe','vot','repe2','repe2_noround','repe2_origdemos'],default=['standard'])
     parser.add_argument('--search-mode',choices=['upstream','paper'],default='upstream')
     parser.add_argument('--limit',type=int)
     parser.add_argument('--offset',type=int,default=0)

@@ -1,0 +1,9 @@
+{
+  "name": "gpt-4o-mini-2024-07-18-vot-waypoint-limit-v1",
+  "provider": "openai",
+  "model": "gpt-4o-mini-2024-07-18",
+  "prompt_family": "gpt",
+  "prompt_variant": "waypoint_limit_by_obstacles",
+  "max_tokens": 8000,
+  "temperature": 0
+}

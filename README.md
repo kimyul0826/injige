@@ -1,3 +1,25 @@
+# LLM-A* 재현 및 개선 (SWE3011 과제)
+
+- 실험 전체 정리와 논리: [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md)
+- 실행 폴더 ↔ 설정 ↔ 분석 대응표: [docs/RUNS.md](docs/RUNS.md)
+- 보고서 초안(ACL 템플릿): [report/](report/)
+
+## 빠른 실행 (GPT-4o mini, 제안 프롬프트 RePE2)
+
+API 키는 코드·설정 파일에 넣지 않고 터미널 환경변수로만 설정합니다.
+
+```bash
+read -rsp 'OpenAI API key: ' OPENAI_API_KEY; echo; export OPENAI_API_KEY
+python -m llm_astar --methods astar llm llm-astar --config configs/gpt4omini_repe2.json --prompts repe2 --input data/environment_50_30.json --output outputs/my-run
+```
+
+- 입력은 원본과 같은 JSON 형식(지도 + `start_goal` 목록 또는 단일 질의), 출력도 원본과 같은 `results.jsonl` / `summary.json` / `table1.csv`입니다.
+- 원 논문 프롬프트는 `--prompts standard cot repe`, 설정은 `configs/gpt4omini_table1_upstream.json`.
+- 1000문제 전체는 Batch API가 저렴합니다: `scripts/run_batch_table1.py --config ... --prompts ... --output ... --zip`.
+- 테스트: `python -B -m unittest tests/test_*.py`
+
+---
+
 새 프롬프트 실험: 8방향 이동과 장벽 양 끝 좌표를 명시하는 `configs/llama3_8way_walls.json`을 추가했습니다. 실행 명령은 [Vast 가이드 §8](README_VAST.md#8-8방향-이동--명시적-장벽-좌표-실험)을 확인하세요.
 
 # LLM-A* 과제 구현
@@ -169,3 +191,75 @@ result = LLMAStar(model, prompt='standard').searching(query)
 
 기존 결과 키 `operation`, `storage`, `length`, `llm_output`을 유지하며 `path`, `valid` 등을 추가합니다.
 자연어 query 파싱과 PNG 자동 생성은 지원하지 않습니다. 지도별 수정 없이 동일 JSON 형식을 처리합니다.
+
+
+## GPT-4o mini 확장 재현 (모델 버전 고정)
+
+논문/공개 코드의 GPT용 원본 프롬프트와 upstream 탐색·파싱을 사용하고 모델을 GPT-4o mini로 바꾸는 확장 재현입니다. 논문의 GPT-3.5 원모델을 그대로 재현하는 실험은 아닙니다. Llama 실험과 동일하게 지도 100개 × 시작·도착 10쌍, Standard·CoT·RePE 각 1,000문제, temperature=0, 출력 한도 8,000토큰을 사용합니다. 대각선 이동 문장과 배리어 표기 변경은 적용하지 않습니다.
+
+- 설정: `configs/gpt4omini_table1_upstream.json`
+- 모델: `gpt-4o-mini-2024-07-18` (반환된 실제 모델명도 응답 파일에 기록)
+- OpenAI 공식 모델 설명: https://developers.openai.com/api/docs/models/gpt-4o-mini
+- GPU 및 Llama 가중치는 필요 없습니다. `openai`, `shapely`가 설치된 Python 환경에서 실행합니다.
+
+현재 서버의 기존 환경을 사용하려면 프로젝트 폴더에서:
+
+```bash
+source .conda/envs/llm-astar/bin/activate
+read -rsp 'OpenAI API key: ' OPENAI_API_KEY
+export OPENAI_API_KEY
+```
+
+키를 입력해도 화면에 표시되지 않고 명령 이력에는 키가 남지 않습니다. 코드·설정·채팅에 키를 넣지 마세요.
+
+먼저 API 호출 없이 실행 규모를 확인합니다:
+
+```bash
+python3 scripts/run_api_table1.py --dry-run
+```
+
+연결과 응답을 소규모로 확인하려면 (3문제 × 3방식 = 9회 유료 생성):
+
+```bash
+python3 scripts/run_api_table1.py \
+  --limit 3 \
+  --output outputs/gpt4omini-smoke-v1 \
+  --zip
+```
+
+전체 실험 (3,000회 생성, A* 포함 7,000개 결과 행):
+
+```bash
+python3 scripts/run_api_table1.py \
+  --output outputs/gpt4omini-table1-upstream-v1 \
+  --zip
+```
+
+같은 명령으로 다시 실행하면 저장된 응답은 재호출하지 않고 검색·집계만 다시 계산합니다. 소규모 확인과 전체 실행은 별도 출력 폴더를 사용하며, 소규모 9개 응답은 전체 실행에 자동 이관되지 않습니다. 코드·설정을 바꿨다면 새 출력 폴더를 사용합니다.
+
+완료 후 `outputs/gpt4omini-table1-upstream-v1.zip`에 설정·원본 입력·실제 프롬프트와 응답·사용 토큰·결과·상태를 저장합니다. 실행 중단/오류 시에도 `--zip`이면 확보된 자료를 압축하고 상태에 중단/실패를 기록합니다. API 오류의 원문은 터미널에 표시되며 상태 파일에는 오류 유형만 저장합니다. SDK는 일시적인 API 오류를 기본 최대 2회 재시도합니다.
+
+비용은 계정의 실제 적용 요금과 토큰 사용량에 따라 달라집니다. 실행 전 공식 요금을 확인하고 소규모 결과의 `usage`로 전체 비용을 추정하세요. OpenAI API 키는 실행하는 터미널 환경에 설정해야 합니다.
+
+### GPT-4o mini 원본 프롬프트: Batch API
+
+순차 실행을 `Ctrl+C`로 중단한 뒤 다음 명령으로 남은 요청만 Batch로 제출합니다.
+기본적으로 `outputs/gpt4omini-table1-upstream-v1/responses`의 동일 설정·프롬프트 응답을 재사용합니다.
+API 키가 이미 현재 터미널에 설정되어 있으면 다시 입력할 필요가 없습니다.
+
+```bash
+.conda/envs/llm-astar/bin/python scripts/run_batch_table1.py --zip
+```
+
+기본 출력은 `outputs/gpt4omini-table1-upstream-batch-v1`입니다. 제출 뒤 20초마다 상태를 조회하고,
+완료되면 원본 파서와 탐색으로 평가하여 결과 ZIP을 만듭니다. 기다리는 중 `Ctrl+C`를 눌러도
+제출된 원격 Batch는 계속 진행됩니다. 같은 명령으로 다시 실행하면 기존 Batch를 조회합니다.
+`--submit-only`는 제출·상태 조회까지만 하고 종료합니다. `--dry-run`은 API 호출과 파일 생성 없이
+재사용·남은 요청 수를 확인합니다. 실패·만료된 요청이 있으면 성공한 응답을 먼저 저장하고 중단합니다.
+`logs/batch`의 기록을 확인한 후 `--retry-failed`를 붙이면 저장되지 않은 요청만 새 Batch로 보냅니다.
+
+기존 순차 응답의 비용은 이미 발생했으며 Batch 할인은 새 Batch 요청에만 적용됩니다.
+혼합 응답의 출처는 응답별 `batch_id`와 `logs/batch/state.json`에 기록합니다.
+Batch 요청별 추론 시간은 제공되지 않으므로 `generation_seconds`를 null로 기록합니다.
+제출 도중 연결이 끊겨 Batch ID 저장 여부가 불확실하면 자동 재제출을 차단하므로,
+OpenAI Batch 대시보드에서 중복 제출 여부를 먼저 확인하세요.

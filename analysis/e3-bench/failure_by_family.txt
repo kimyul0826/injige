@@ -1,0 +1,6 @@
+family   need(mean)  | per prompt: waypoints returned (mean) / kept after filter (mean) / zero kept % / truncated
+dense     1.81       | standard: 13.42/10.90/  5%/5  repe2: 2.42/2.11/  0%/0  endpoint std: 3.32/3.19/  3%/3
+rooms     2.05       | standard: 14.39/10.59/  8%/8  repe2: 2.37/1.78/  5%/2  endpoint std: 3.83/2.68/  9%/0
+utrap     1.64       | standard: 16.21/13.86/  7%/7  repe2: 1.44/1.33/  3%/1  endpoint std: 2.56/2.46/  0%/0
+maze      6.57       | standard: 9.78/6.13/ 22%/10  repe2: 2.21/1.14/ 28%/2  endpoint std: 3.54/2.79/  9%/5
+scaled2   1.33       | standard: 5.55/4.63/  3%/1  repe2: 1.37/1.29/  8%/0  endpoint std: 2.48/2.35/  0%/0

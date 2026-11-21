@@ -1,0 +1,9 @@
+{
+  "name": "gpt-4o-mini-2024-07-18-vot-map-v1",
+  "provider": "openai",
+  "model": "gpt-4o-mini-2024-07-18",
+  "prompt_family": "gpt",
+  "prompt_variant": "ascii_map",
+  "max_tokens": 8000,
+  "temperature": 0
+}

@@ -310,7 +310,7 @@ def main():
     parser.add_argument('--input', default=str(ROOT/'data/environment_50_30.json'))
     parser.add_argument('--output', default='outputs/llama3-multigpu')
     parser.add_argument('--gpus', default='all', help='Visible GPU IDs, e.g. 0,1,2,3; default: all visible GPUs')
-    parser.add_argument('--prompts', nargs='+', choices=['standard','cot','repe'], default=['standard','cot','repe'])
+    parser.add_argument('--prompts', nargs='+', choices=['standard','cot','repe','vot','repe2','repe2_noround','repe2_origdemos'], default=['standard','cot','repe'])
     parser.add_argument('--limit', type=int)
     parser.add_argument('--zip', action='store_true', help='Export result ZIP on completion or handled interruption/failure')
     parser.add_argument('--zip-only', action='store_true', help='Export existing output without running inference')

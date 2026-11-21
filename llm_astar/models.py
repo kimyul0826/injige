@@ -50,8 +50,16 @@ def parse_path(text, mode='legacy'):
 
 
 def build_prompt(query, style, family, variant="upstream"):
+    from .prompt_variants import vot_template, repe2_template
     templates = llama_prompt if family == 'llama' else gpt_prompt
-    prompt = templates[style].format(start=query['start'],goal=query['goal'],
+    if style == 'vot':
+        template = vot_template(templates['cot'], family)
+    elif style.startswith('repe2'):
+        template = repe2_template(family, {'repe2': 'full', 'repe2_noround': 'noround',
+                                           'repe2_origdemos': 'origdemos'}[style])
+    else:
+        template = templates[style]
+    prompt = template.format(start=query['start'],goal=query['goal'],
         horizontal_barriers=query.get('horizontal_barriers',[]),vertical_barriers=query.get('vertical_barriers',[]))
 
     from .prompt_variants import clarify_prompt

@@ -207,3 +207,75 @@ python3 scripts/run_multigpu.py \
 총 3,000회 생성이며, 결과는 `outputs/llama3-8way-only-v1.zip`에 저장된다. Standard만 먼저 확인하려면 `--prompts standard --output outputs/llama3-8way-only-standard-v1`을 사용한다. 원본 대조군도 같은 GPU·소프트웨어에서 실행하면 생성 환경 차이를 통제할 수 있다.
 
 Standard 프롬프트 전문은 `examples/prompt_8way_only.txt`에서 확인할 수 있다.
+
+
+## 10. 원본 프롬프트 + 장애물 수 이하의 중간 경유점
+
+원본에 `prompt_variant=waypoint_limit_by_obstacles` 조건만 적용합니다. 장애물 수 N은 해당 문제의 가로 배리어 항목 수와 세로 배리어 항목 수를 합친 값입니다. 벽들이 연결되거나 교차하더라도 목록의 각 항목을 하나로 셉니다. 시작점·도착점은 중간 경유점 개수에서 제외합니다.
+
+최종 문제의 배리어 목록 바로 뒤에 다음 한 문장을 삽입합니다(예: 장애물 3개):
+
+```text
+For this problem, use at most 3 intermediate waypoints in the final generated path, excluding the start and goal points.
+```
+
+최대 N개이며 정확히 N개를 요구하지 않습니다. 원본 배리어 표기·few-shot 예제·응답·추론 지시는 유지합니다. 8방향 이동 문장, 회피점 지시, 별도의 충돌 규칙은 추가하지 않습니다. 코드에서 생성 경로를 N개로 자르거나 탐색을 제한하지 않습니다. 상한을 초과한 응답도 원래 평가 방식으로 처리하고, 결과 분석에서 프롬프트 준수율을 별도로 확인합니다. 검색 후의 A* 격자 경로에는 이 경유점 상한을 적용하지 않습니다.
+
+Llama 3 8B Instruct 실행:
+
+```bash
+python3 scripts/run_multigpu.py \
+  --config configs/llama3_waypoint_limit.json \
+  --model-path /workspace/Meta-Llama-3-8B-Instruct \
+  --gpus all \
+  --prompts standard cot repe \
+  --output outputs/llama3-waypoint-limit-v1 \
+  --zip
+```
+
+3,000회 생성, A* 포함 7,000개 결과 행입니다. 모델·정밀도·출력 한도·프롬프트 종류·입력·검색 조건은 원본 Llama 실험과 같습니다. 예시 전문은 `examples/prompt_waypoint_limit_llama.txt`입니다.
+
+GPT-4o mini도 동일한 조건만 추가한 별도 설정을 제공합니다. API 키를 설정한 환경에서:
+
+```bash
+python3 scripts/run_api_table1.py \
+  --config configs/gpt4omini_waypoint_limit.json \
+  --output outputs/gpt4omini-waypoint-limit-v1 \
+  --zip
+```
+
+GPT용 원본 프롬프트에 조건만 추가하며 모델·생성 설정은 `gpt4omini_table1_upstream.json`과 같습니다. 예시 전문은 `examples/prompt_waypoint_limit_gpt.txt`입니다. 모델 효과를 비교할 때는 각 모델의 원본 실험을 대조군으로 사용합니다.
+
+
+## 11. Vast 템플릿의 기존 PyTorch/CUDA 재사용
+
+이미 GPU 연산이 되는 템플릿 환경은 다음 설치기를 사용할 수 있습니다. 기본 `setup_vast.sh`와 다른 선택지이며, torch 설치 명령은 실행하지 않습니다.
+
+기존 프로젝트 `.venv`가 켜져 있으면 먼저 `deactivate`로 빠져나와, 템플릿에서 제공한 PyTorch가 보이는 Python을 사용합니다:
+
+```bash
+python3 scripts/check_runtime.py
+bash scripts/setup_vast_existing.sh
+source .venv-existing-torch/bin/activate
+```
+
+`.venv-existing-torch`는 템플릿 Python의 패키지를 읽는 `--system-site-packages` 환경입니다. 실행 전·후 GPU BF16 연산을 확인하고, 기존 torch·triton·NVIDIA 패키지는 설치된 버전으로 고정합니다. 나머지 실험 패키지만 설치하며, 충돌 시 고정 버전을 바꾸지 않고 설치 오류를 표시합니다. 템플릿에 없는 의존 패키지는 다운로드할 수 있습니다. 이미 별도 torch가 들어 있는 동명 가상환경은 재사용하지 않고 오류로 중단합니다.
+
+기존 설치가 이미 진행 중이면 먼저 종료한 뒤 템플릿 환경으로 돌아와 실행합니다. 기존 `.venv`를 삭제하지 않습니다. 이후 모델 전송 및 `run_multigpu.py` 명령은 같습니다. Python을 직접 지정하려면 `PYTHON_BIN=/path/to/python bash scripts/setup_vast_existing.sh`를 사용합니다.
+
+## 9. Llama 추가 실험 3종 (RePE2, 끝점 후보 예시 정렬, E1-b) — 한 번에 실행
+
+GPU마다 Llama 복제본 1개를 올려 3개 실험을 순서대로 돌리고, 실험마다 결과 ZIP을 만든다.
+가중치는 `/workspace/Meta-Llama-3-8B-Instruct/`에 직접 복사해 둔다(`config.json`, `tokenizer.json`, `*.safetensors`).
+
+```bash
+git clone https://github.com/<계정>/<저장소>.git assign && cd assign
+tmux new -s llama            # 연결이 끊겨도 계속 실행되도록
+bash scripts/run_vast_llama_extra.sh
+```
+
+- 설치: `scripts/setup_vast_existing.sh`를 호출해 이미지의 PyTorch/CUDA를 재사용하고 `requirements-vast.txt`의 나머지 라이브러리만 설치한다.
+- 결과: `outputs/llama3-repe2-v1.zip`, `outputs/llama3-endpoint-demos-standard-v1.zip`, `outputs/llama3-repe2_origdemos-v1.zip`.
+- 다시 실행하면 끝난 실험은 건너뛰고 중단된 실험은 이어서 한다.
+- 옵션: `MODEL_PATH=...`, `GPUS=0,1,2,3`, `SKIP_SETUP=1`(설치 생략), `LIMIT=8`(8문제 빠른 점검, 출력 이름에 `-limit8`이 붙음).
+- 디코딩 설정은 Table 1 재현과 같다(greedy, 최대 8000토큰). 프롬프트 예시는 `examples/prompt_*_llama.txt`.

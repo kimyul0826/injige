@@ -1,0 +1,39 @@
+from pathlib import Path
+import json,shutil
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+P=Path('/home/skkai/Mobility/2026_2/ykim/assign');OUT=P/'outputs/gpt4omini-table1-upstream-analysis';A=json.loads((OUT/'analysis.json').read_text())
+S=lambda name:{(r['method'],r['prompt']):r for r in A[name]};G,L=S('gpt_summary'),S('llama_summary');pr=['standard','cot','repe'];labels=['Standard','CoT','RePE'];x=np.arange(3);colors=['#7186a0','#008b80']
+plt.rcParams.update({'font.family':'DejaVu Sans','font.size':11,'pdf.fonttype':42})
+fig,axs=plt.subplots(2,2,figsize=(13,9.8))
+for ax,method,metric,title,ylim in [(axs[0,0],'llm','valid_path_ratio','LLM-only valid paths (%)',(0,16)),(axs[0,1],'llm-astar','operation_ratio','LLM+A* search operations (A* = 100%)',(0,80)),(axs[1,0],'llm-astar','storage_ratio','LLM+A* storage (A* = 100%)',(0,100)),(axs[1,1],'llm-astar','relative_path_length','LLM+A* route length (A* = 100%)',(100,104.3))]:
+ for i,(source,name) in enumerate([(L,'Llama 3 8B'),(G,'GPT-4o mini')]):
+  vals=[source[method,p][metric] for p in pr];bars=ax.bar(x+(i-.5)*.34,vals,.32,color=colors[i],label=name,zorder=3)
+  for bar,value in zip(bars,vals):ax.text(bar.get_x()+bar.get_width()/2,value+(.22 if metric=='relative_path_length' else .65),f'{value:.2f}',ha='center',va='bottom',fontsize=10)
+ if method=='llm-astar':
+  w=A['weighted_astar_2'][{'operation_ratio':'operation','storage_ratio':'storage','relative_path_length':'length'}[metric]];ax.axhline(w,c='#b15183',ls='--',lw=1.8,label=f'Weighted A* w=2: {w:.2f}',zorder=4)
+ ax.set(title=title,xticks=x,xticklabels=labels,ylim=ylim);ax.grid(axis='y',alpha=.18);ax.set_axisbelow(True);ax.spines[['top','right']].set_visible(False);ax.legend(fontsize=9,loc=('upper right' if method=='llm' else 'upper left') if metric!='relative_path_length' else 'lower right')
+fig.suptitle('Original prompts: GPT-4o mini vs Llama 3 8B',fontsize=19,y=.975)
+fig.text(.5,.932,'Same 1,000 queries per style | model-family original templates | all hybrid paths valid',ha='center',fontsize=11,color='#52606d')
+fig.subplots_adjust(top=.865,bottom=.09,hspace=.37,wspace=.22)
+fig.text(.5,.035,'Operations, storage and length: geometric means relative to the same A* baseline. Lower is better; success is higher-is-better.',ha='center',fontsize=9)
+fig.text(.5,.015,'Saved-output analysis; no new model calls. Cross-model results also differ in family templates and execution environment.',ha='center',fontsize=9,color='#52606d')
+fig.savefig(OUT/'comparison.png',dpi=170);fig.savefig(OUT/'comparison.pdf');plt.close(fig)
+lines=['# GPT-4o mini 원본 프롬프트 실험 분석','', '## Material Passport','', '- Origin Mode: validate','- Origin Date: 2026-11-21','- Verification Status: ANALYZED','- Version Label: gpt4omini_original_v1','', '## 결과 검증','', '1,000문제 × Standard·CoT·RePE의 3,000개 응답과 A*·LLM·LLM+A* 7,000개 행을 확인했습니다. 프롬프트 3,000개, 파싱 결과, 경로 7,000개의 유효성·길이를 재검사했고 모두 저장 결과와 일치했습니다. summary 재계산, 원본 데이터, Llama 실험의 A* 경로·지표, 실행 당시 소스 해시, ZIP 무결성도 일치했습니다. 모델 추론이나 전체 탐색을 재실행한 재현 검증은 아닙니다.','', '순차 API 응답 81개를 재사용했고 Batch 2,919개는 실패 0개로 완료됐습니다. 모든 응답의 반환 모델은 gpt-4o-mini-2024-07-18입니다. Batch 생성부터 완료까지 542초(9분 2초), 이는 전체 실험 벽시계 시간이나 요청별 추론 시간이 아닙니다.','', '## 핵심 성능','', '탐색량·저장량·길이는 문제별 A* 대비 비율의 기하평균(%)이며 낮을수록 좋습니다. 각 방식의 LLM+A* 성공률은 두 모델 모두 100%입니다. 탐색량은 중복 노드 추출을 포함한 원본 코드의 연산 횟수이고, 실제 시간이나 API 지연을 뜻하지 않습니다.','', '|방식|LLM 직접 성공률 Llama → GPT|LLM+A* 연산 Llama → GPT|저장량 Llama → GPT|길이 Llama → GPT|','|---|---:|---:|---:|---:|']
+for p,label in zip(pr,labels):
+ a,b=L['llm-astar',p],G['llm-astar',p];lines.append(f"|{label}|{L['llm',p]['valid_path_ratio']:.1f}% → {G['llm',p]['valid_path_ratio']:.1f}%|{a['operation_ratio']:.2f}% → {b['operation_ratio']:.2f}%|{a['storage_ratio']:.2f}% → {b['storage_ratio']:.2f}%|{a['relative_path_length']:.2f}% → {b['relative_path_length']:.2f}%|")
+lines+=['','GPT에서는 CoT의 평균 탐색량이 가장 작습니다. RePE는 GPT 내에서 CoT보다 탐색량이 많지만, Llama RePE와 비교하면 탐색량이 16.75% 작습니다. Standard는 Llama 대비 9.68% 많고 CoT는 +0.78%로 차이가 작습니다.','', '## 동일 문제를 짝지은 불확실성 분석','', '100개 지도(지도당 10문제)를 묶어 재표집한 cluster bootstrap 20,000회, seed=20261121. 95% 구간은 탐색적이며 다중비교 보정하지 않았습니다. 한 번의 생성 결과를 분석하므로 재호출 변동성은 포함하지 않습니다.','', '|방식|LLM 직접 성공률 차이 GPT−Llama (pp)|연산 변화 GPT/Llama−1|GPT 연산 우세/열세 문제 수|','|---|---:|---:|---:|']
+for p,label in zip(pr,labels):
+ d=A['by_prompt'][p];v=d['comparison_to_llama']['operation'];lo,hi=d['llm_success_delta_pp_ci'];cl,ch=v['ratio_ci'];lines.append(f"|{label}|{d['llm_success_delta_pp']:+.2f} [{lo:+.2f}, {hi:+.2f}]|{100*(v['gpt_over_llama_geomean']-1):+.2f}% [{100*(cl-1):+.2f}, {100*(ch-1):+.2f}]|{v['gpt_better']} / {v['gpt_worse']}|")
+lines+=['','RePE의 탐색량 차이는 지도 재표집 구간에서도 감소 방향이지만, 경로 길이 차이 구간은 0을 포함합니다. CoT의 연산 차이 구간도 0을 포함해 실질적 우세를 주장하기 어렵습니다.','', '## Weighted A* 대조','', '|방법|성공률|연산/A*|저장량/A*|길이/A*|','|---|---:|---:|---:|---:|']
+w=A['weighted_astar_2'];lines.append(f"|Weighted A* w=2|100%|{w['operation']:.2f}%|{w['storage']:.2f}%|{w['length']:.2f}%|")
+for p,label in zip(pr,labels):
+ r=G['llm-astar',p];lines.append(f"|GPT {label}+A*|100%|{r['operation_ratio']:.2f}%|{r['storage_ratio']:.2f}%|{r['relative_path_length']:.2f}%|")
+lines+=['','Weighted A*는 원본과 같은 중복 추출·tie-break 조건(dedupe=False, tie=node)의 저장 결과입니다. 세 방식 모두에서 평균 연산·저장량·길이가 GPT보다 작습니다. 개별 문제 전부에서 우세하다는 뜻은 아닙니다. GPT의 연산은 Weighted A* 대비 Standard +45.58%, CoT +41.09%, RePE +55.16%입니다. 모델 호출 시간·토큰 비용은 이 비교에 포함되지 않으며 Weighted A*에는 LLM 호출이 없습니다.','', '## 실패와 출력 행동','', '|방식|장애물 교차 실패|장애물 위 경유점|끝점 오류|출력 한도 도달|리스트 미발견|경유점 중앙값 / 최대|출력 토큰 중앙값|','|---|---:|---:|---:|---:|---:|---:|---:|']
+for p,label in zip(pr,labels):
+ d=A['by_prompt'][p];f=d['failure_categories_overlapping'];lines.append(f"|{label}|{f.get('barrier_intersection',0)}|{f.get('waypoint_on_barrier',0)}|{f.get('wrong_or_missing_endpoints',0)}|{d['truncated']}|{d['no_bracket_list']}|{d['waypoints']['median']:g} / {d['waypoints']['max']}|{d['completion_tokens']['median']:g}|")
+lines+=['','실패 유형은 중복 집계입니다. Standard의 935개 실패 중 910개에서 장애물 교차가 확인됐고, CoT는 926개 중 912개, RePE는 912개 중 909개입니다. 단순 리스트 형식보다 기하적 충돌 문제가 훨씬 큽니다. 경유점 수는 max(len(parsed_path)−2,0)이며 끝점이 잘못된 응답까지 포함한 기술통계입니다.','', '최대 출력 8,000토큰에서 잘린 응답은 37개이고 이들의 LLM 직접 경로는 모두 실패했습니다. 리스트가 없으면 원본 파서는 [(0,0),(0,0)]로 대체하므로 parse_failures만으로 형식 성공을 판단할 수 없습니다. 리스트 미발견 31개와 명시적 parse error 6개는 별도로 집계했습니다. 잘린 출력의 영향을 포함하더라도 대부분의 직접 경로 실패는 다른 응답에서 발생했습니다.','', 'Standard에서 경유점 10개 이상 346개, 20개 이상 228개로 조밀하게 점을 나열하는 출력이 여전히 많습니다. CoT는 각각 143개·76개, RePE는 69개·38개입니다. 점 개수만으로 성능 원인을 확정하지 않습니다.','', '## 해석의 범위','', '- Llama와 GPT는 같은 문제·같은 탐색 규칙이지만 저자 코드의 모델 계열별 원본 템플릿을 사용합니다. 동일 문자열 프롬프트에서 모델만 교체한 통제 실험이 아닙니다. 로컬 BF16과 API 실행 환경도 다릅니다. 따라서 모델 자체의 일반적인 좌표 능력 순위로 확대할 수 없습니다.','- GPT는 논문의 GPT-3.5 모델이 아닌 GPT-4o mini 확장 실험입니다.','- LLM 직접 경로 성공률과 LLM+A* 성공률을 구분해야 합니다. A*가 유효한 최종 경로를 찾았다고 모델 출력이 장애물을 피했다는 뜻은 아닙니다.','- LLM 직접 경로 길이는 성공한 서로 다른 부분집합에서 집계됩니다. 전체 성능 비교의 주 근거로 삼지 않습니다. 같은 문제에서 두 모델 모두 직접 성공한 수는 Standard 22, CoT 18, RePE 19개뿐입니다.','- 81개 순차 응답과 2,919개 Batch 응답이 혼합돼 있으며 출처가 기록돼 있습니다. 이들로 Batch와 순차 방식 간 품질 효과를 추정하지 않았습니다.','- 이번 숫자는 저장 결과 분석입니다. API를 재호출한 재현 실험은 하지 않았습니다.','', '## Fallacy Scan — 11/11 확인','', '|항목|판정과 적용|','|---|---|','|Simpson 역설|방식별 결과를 분리해 보고; 전체 평균으로 방향을 덮지 않음|','|생태학적 오류|평균 우세를 개별 문제 전부의 우세로 해석하지 않음|','|Berkson 선택 편향|전체 1,000문제 사용; 직접 성공 부분집합에는 선택 편향 주의|','|Collider 편향|성공 여부로 조건화한 직접 경로 길이는 보조 통계로 한정|','|기저율 무시|성공 개수와 전체 분모 1,000 함께 명시|','|평균 회귀|극단 사례 선택 기반 전후 효과를 주장하지 않음|','|생존자 편향|전체 실패·절단·형식 문제 포함; 성공 경로 길이는 제한 명시|','|다중 탐색|여러 방식·지표의 탐색적 비교, 보정되지 않은 구간 명시|','|분석 선택 자유도|사전등록 없음; 원본 지표 및 분석 규칙·seed 공개|','|인과 혼동|모델 계열 템플릿·환경 차이를 통제한 순수 모델 효과가 아님|','|역인과|개입 방향은 명확하지만 출력 특성과 탐색 성능의 인과 기전은 추정하지 않음|','', 'Overall Confidence: CAUTION. 저장 결과의 집계·입력 일치는 확인됐으나 모델 재생성, 환경 통제, 다중비교 확증은 수행하지 않았습니다.']
+(OUT/'report.md').write_text('\n'.join(lines)+'\n');shutil.copy('/tmp/report_gptmini.py',OUT/'build_report.py')
+print(OUT/'report.md')

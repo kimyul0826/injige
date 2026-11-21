@@ -1,0 +1,64 @@
+
+Identify a path between the start and goal points to navigate around obstacles and find the shortest path to the goal. 
+Horizontal barriers are represented as [y, x_start, x_end], and vertical barriers are represented as [x, y_start, y_end].
+Find the path in rounds. Round k uses exactly k intermediate waypoints, starting from Round 0 (a straight line from the start to the goal). After each round, check whether every segment avoids all barriers, and stop at the first valid round.
+Conclude your response with the generated path in the format "Generated Path: [[x1, y1], [x2, y2], ...]".
+
+Start Point: [5, 20]
+Goal Point: [45, 3]
+Horizontal Barriers: [[10, 16, 23], [24, 6, 27]]
+Vertical Barriers: [[3, 18, 21], [15, 23, 30], [35, 1, 4]]
+Round 0: [[5, 20], [45, 3]]
+Check: Every segment avoids all barriers. Valid.
+Generated Path: [[5, 20], [45, 3]]
+
+Start Point: [2, 21]
+Goal Point: [47, 12]
+Horizontal Barriers: [[5, 22, 30], [27, 45, 48], [22, 0, 3]]
+Vertical Barriers: [[32, 0, 18], [24, 15, 30]]
+Round 0: [[2, 21], [47, 12]]
+Check: The segment from [2, 21] to [47, 12] crosses the vertical barrier at x=32 spanning y=0 to y=18 and the vertical barrier at x=24 spanning y=15 to y=30. Not valid.
+Round 1: [[2, 21], [22, 14], [47, 12]]
+Check: The segment from [22, 14] to [47, 12] crosses the vertical barrier at x=32 spanning y=0 to y=18. Not valid.
+Round 2: [[2, 21], [22, 14], [33, 19], [47, 12]]
+Check: Every segment avoids all barriers. Valid.
+Generated Path: [[2, 21], [22, 14], [33, 19], [47, 12]]
+
+Start Point: [2, 5]
+Goal Point: [39, 19]
+Horizontal Barriers: [[23, 0, 12], [13, 11, 22], [25, 42, 50], [26, 0, 14]]
+Vertical Barriers: [[32, 6, 21], [16, 20, 30]]
+Round 0: [[2, 5], [39, 19]]
+Check: The segment from [2, 5] to [39, 19] crosses the vertical barrier at x=32 spanning y=6 to y=21. Not valid.
+Round 1: [[2, 5], [23, 24], [39, 19]]
+Check: Every segment avoids all barriers. Valid.
+Generated Path: [[2, 5], [23, 24], [39, 19]]
+
+Start Point: [13, 27]
+Goal Point: [43, 7]
+Horizontal Barriers: [[12, 39, 50]]
+Vertical Barriers: [[19, 23, 30], [45, 0, 15], [7, 0, 12], [37, 0, 16]]
+Round 0: [[13, 27], [43, 7]]
+Check: The segment from [13, 27] to [43, 7] crosses the vertical barrier at x=19 spanning y=23 to y=30 and the vertical barrier at x=37 spanning y=0 to y=16. Not valid.
+Round 1: [[13, 27], [20, 22], [43, 7]]
+Check: The segment from [20, 22] to [43, 7] crosses the vertical barrier at x=37 spanning y=0 to y=16. Not valid.
+Round 2: [[13, 27], [20, 22], [37, 17], [43, 7]]
+Check: The segment from [37, 17] to [43, 7] crosses the horizontal barrier at y=12 spanning x=39 to x=50. Not valid.
+Round 3: [[13, 27], [20, 22], [37, 17], [38, 13], [43, 7]]
+Check: Every segment avoids all barriers. Valid.
+Generated Path: [[13, 27], [20, 22], [37, 17], [38, 13], [43, 7]]
+
+Start Point: [6, 7]
+Goal Point: [39, 27]
+Horizontal Barriers: [[22, 20, 37], [20, 0, 24], [25, 47, 50], [4, 5, 8]]
+Vertical Barriers: [[28, 0, 10]]
+Round 0: [[6, 7], [39, 27]]
+Check: The segment from [6, 7] to [39, 27] crosses the horizontal barrier at y=22 spanning x=20 to x=37. Not valid.
+Round 1: [[6, 7], [37, 21], [39, 27]]
+Check: Every segment avoids all barriers. Valid.
+Generated Path: [[6, 7], [37, 21], [39, 27]]
+
+Start Point: [5, 5]
+Goal Point: [20, 20]
+Horizontal Barriers: [[10, 0, 25], [15, 30, 50]]
+Vertical Barriers: [[25, 10, 22]]
